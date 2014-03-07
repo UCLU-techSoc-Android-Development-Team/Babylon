@@ -6,8 +6,11 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
@@ -28,6 +31,8 @@ import com.techsoc.babylon.singletalk.ChatMessage;
 import com.techsoc.babylon.singletalk.UserPagerFragment;
 
 public class MainActivity extends FragmentActivity {
+	
+	private static final int VOICE_RECOGNITION_REQUEST_CODE = 0;
 
 	public static final int NUM_PAGES = 2;
 
@@ -67,6 +72,7 @@ public class MainActivity extends FragmentActivity {
 				// TODO Auto-generated method stub
 			}
 
+			
 			@Override
 			public void onPageSelected(int position) {
 				// TODO Auto-generated method stub
@@ -99,9 +105,16 @@ public class MainActivity extends FragmentActivity {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event) {
 				// If the event is a key-down event on the "enter" button
-				if ((event.getAction() == KeyEvent.ACTION_DOWN)
-						&& (keyCode == KeyEvent.KEYCODE_ENTER)) {
-					submitMessage();
+				if ((event.getAction() == KeyEvent.ACTION_DOWN) && (keyCode == KeyEvent.KEYCODE_ENTER)) {
+					
+					String messageText = editText1.getText().toString();
+					
+					
+					if (messageText.isEmpty()) {
+						startVoiceRecognitionActivity();
+					} 
+					else submitMessage(messageText);
+					
 				}
 				return false;
 			}
@@ -112,7 +125,14 @@ public class MainActivity extends FragmentActivity {
 
 			@Override
 			public void onClick(View arg0) {
-				submitMessage();
+				
+				String messageText = editText1.getText().toString();
+				
+				if (messageText.isEmpty()) {
+					startVoiceRecognitionActivity();
+				} 
+				
+				else submitMessage(messageText);
 			}
 		});
 
@@ -120,15 +140,14 @@ public class MainActivity extends FragmentActivity {
 
 	}
 
-	private void submitMessage() {
+	private void submitMessage(String stringMessage) {
 
 		mUserPagerFragment = mPagerAdapter.getFragment(mPager.getCurrentItem());
 
 		String language = mUserPagerFragment.getLanguage();
 		String currentUserName = mUserPagerFragment.getUserName();
 
-		ChatMessage newChatMessage = new ChatMessage(false, editText1.getText()
-				.toString(), language, currentUserName, Calendar.getInstance());
+		ChatMessage newChatMessage = new ChatMessage(false, stringMessage, language, currentUserName, Calendar.getInstance());
 
 		new TranslateText(newChatMessage).execute(newChatMessage.getText(),
 				language, "ru");
@@ -158,6 +177,7 @@ public class MainActivity extends FragmentActivity {
 			super(fm);
 		}
 
+	
 		@Override
 		public Fragment getItem(int position) {
 			
@@ -170,6 +190,7 @@ public class MainActivity extends FragmentActivity {
 			return frag;
 		}
 
+	
 		@Override
 		public int getCount() {
 			return NUM_PAGES;
@@ -180,6 +201,44 @@ public class MainActivity extends FragmentActivity {
 		}
 	}
 
+	
+	
+	
+	
+	private void startVoiceRecognitionActivity() {
+		
+		mUserPagerFragment = mPagerAdapter.getFragment(mPager.getCurrentItem());
+		String language = mUserPagerFragment.getLanguage();
+		
+    	Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM);
+		intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE, language);
+		intent.putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak Now");
+		startActivityForResult(intent, VOICE_RECOGNITION_REQUEST_CODE);
+	}
+	
+	
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == VOICE_RECOGNITION_REQUEST_CODE
+				&& resultCode == Activity.RESULT_OK) {
+			// Returns the arraylist of strings sorted by confidence
+			ArrayList<String> matches = data
+					.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+			String message = matches.get(0);
+			
+			submitMessage(message);
+		}
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 	
@@ -219,6 +278,7 @@ public class MainActivity extends FragmentActivity {
 			return translatedText;
 		}
 
+		
 		@Override
 		protected void onPostExecute(String translatedText) {
 			// TODO Things to do with translated Text

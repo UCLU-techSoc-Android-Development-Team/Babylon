@@ -3,9 +3,12 @@ package com.techsoc.babylon.singletalk;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
+import android.content.Intent;
 import android.content.res.Resources;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -15,18 +18,22 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.techsoc.babylon.R;
 
 public class UserPagerFragment extends Fragment {
 
+	protected static final String TAG = UserPagerFragment.class.getName();
+
 	public static final String ARG_USER = "user";
 	public static final String USER_NAME = "user_name";
 
 	private static String PACKAGE_NAME;
-
 	private int mPageNumber;
+
 	private int NUMBER_OF_PAGES = 2;
 
 	/* Discussion List */
@@ -42,6 +49,8 @@ public class UserPagerFragment extends Fragment {
 	private static HashMap<String, ArrayList<ChatMessage>> chatSource;
 
 	private int currentPosition = 0;
+
+	private TextToSpeech textToSpeech;
 
 	public static UserPagerFragment create(int pageNumber,
 			HashMap<String, ArrayList<ChatMessage>> inputChatSource,
@@ -66,6 +75,20 @@ public class UserPagerFragment extends Fragment {
 		PACKAGE_NAME = this.getActivity().getApplicationContext()
 				.getPackageName();
 
+		setupTextToSpeech();
+
+	}
+
+	private void setupTextToSpeech() {
+		textToSpeech = new TextToSpeech(this.getActivity(),
+				new TextToSpeech.OnInitListener() {
+					public void onInit(int status) {
+						if (status == TextToSpeech.SUCCESS) {
+						} else {
+							Log.e(TAG, "Failed to intialize Text to Speech");
+						}
+					}
+				});
 	}
 
 	@Override
@@ -80,6 +103,22 @@ public class UserPagerFragment extends Fragment {
 		adapter = new DiscussArrayAdapter(this.getActivity()
 				.getApplicationContext(), R.layout.listitem_discuss);
 		mDiscussionList.setAdapter(adapter);
+
+		mDiscussionList.setOnItemClickListener(new OnItemClickListener() {
+
+			@Override
+			public void onItemClick(AdapterView<?> arg0, View arg1,
+					int position, long arg3) {
+				// TODO Auto-generated method stub
+				String currentLanguage = getLanguage();
+				ArrayList<ChatMessage> currentChatSource = chatSource
+						.get(currentLanguage);
+				String text = currentChatSource.get(position).getText();
+				
+				convertToSpeech(text, currentLanguage);
+			}
+
+		});
 
 		/* Initialise the View Pager with its adapter */
 		mPager = (ViewPager) rootView.findViewById(R.id.lang_pager);
@@ -103,7 +142,6 @@ public class UserPagerFragment extends Fragment {
 				currentPosition = position;
 				String currentLanguage = getLanguage();
 				String currentUser = getUserName();
-				
 
 				Log.d("New Language", currentLanguage);
 				Log.d("", "");
@@ -112,14 +150,15 @@ public class UserPagerFragment extends Fragment {
 						.get(currentLanguage);
 
 				adapter.clearChat();
-				
+
 				for (int i = 0; i < currentChatSource.size(); i++) {
-					
-				ChatMessage curMessage = currentChatSource.get(i);
-				
-				if (curMessage.getAuthor().equals(currentUser))
-					curMessage.setPosition(false);
-				else curMessage.setPosition(true);
+
+					ChatMessage curMessage = currentChatSource.get(i);
+
+					if (curMessage.getAuthor().equals(currentUser))
+						curMessage.setPosition(false);
+					else
+						curMessage.setPosition(true);
 
 					adapter.add(curMessage);
 				}
@@ -134,6 +173,34 @@ public class UserPagerFragment extends Fragment {
 
 		return rootView;
 	}
+	
+	private void convertToSpeech(String text, String currentLanguage) {
+		
+		Log.d("Input Language", currentLanguage);
+		
+		Locale lanLocale;
+		
+		if (currentLanguage.equals("en")) {
+			lanLocale = Locale.UK;
+		}
+		else lanLocale = new Locale(currentLanguage);
+		
+		
+		if (textToSpeech
+				.isLanguageAvailable(lanLocale) == TextToSpeech.LANG_AVAILABLE) {
+			textToSpeech.setLanguage(lanLocale);
+			Log.v("Translate", "Language Available: " + currentLanguage);
+			textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null);
+		} else {
+			Log.e("Translate", "Language Not Available: "
+					+ currentLanguage);
+			Intent installIntent = new Intent();
+			installIntent
+					.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
+			this.getActivity().startActivity(installIntent);
+		}
+	}
+	
 
 	public void addChatMessage(ChatMessage cm) {
 		adapter.add(cm);

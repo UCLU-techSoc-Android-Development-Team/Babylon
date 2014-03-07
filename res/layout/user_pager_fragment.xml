@@ -47,6 +47,9 @@
         android:divider="@null"
         android:dividerHeight="10dp"
         android:stackFromBottom="true"
+        
+        android:listSelector="@android:color/transparent"
+        
         android:transcriptMode="alwaysScroll" >
     </ListView>
 
