@@ -15,6 +15,7 @@ import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+
 import com.techsoc.babylon.R;
 
 public class DiscussArrayAdapter extends ArrayAdapter<ChatMessage> {
