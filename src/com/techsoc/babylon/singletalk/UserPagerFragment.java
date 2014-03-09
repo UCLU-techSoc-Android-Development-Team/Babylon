@@ -225,6 +225,12 @@ public class UserPagerFragment extends Fragment {
 
 		return getArguments().getString(USER_NAME);
 	}
+	
+	public void setUserName(String userName) {
+
+		 getArguments().putString(USER_NAME,userName);
+	}
+	
 
 	private class LanguageSliderAdapter extends FragmentStatePagerAdapter {
 

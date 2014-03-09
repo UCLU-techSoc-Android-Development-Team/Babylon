@@ -8,7 +8,9 @@ import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -23,6 +25,7 @@ import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
@@ -32,6 +35,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
 
@@ -62,7 +66,10 @@ public class MainActivity extends FragmentActivity {
 	public ArrayList<ChatMessage> germanMessageHistory = new ArrayList<ChatMessage>();
 	public ArrayList<ChatMessage> russianMessageHistory = new ArrayList<ChatMessage>();
 	
+	public ArrayList<String> userNames = new ArrayList<String>();
 	public ArrayList<String> userColours = new ArrayList<String>();
+	
+	public int currentPagePosition = 0; // Needed to change the names in actionbar
 	
 	int messageCounter = 0;
 
@@ -71,9 +78,14 @@ public class MainActivity extends FragmentActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
 		
-		//Adding colours, currently there are only two colours
+		//initialisng colours, currently there are only two colours
 		userColours.add("blue");
+		userColours.add("red");
 		userColours.add("yellow");
+		
+		//Initialising Names
+		userNames.add("Vlad");
+		userNames.add("Martin");
 		
 		PACKAGE_NAME = this.getApplicationContext().getPackageName();
 		
@@ -147,11 +159,16 @@ public class MainActivity extends FragmentActivity {
 			}
 
 
+			@SuppressWarnings("deprecation")
 			@SuppressLint("NewApi") // New API error caused because of setBackground which is available from API 16. 
 			@Override
 			public void onPageSelected(int position) {
 								
 				Log.v("OnPageChangeListener", "User Changed");
+				
+				currentPagePosition = position;
+				
+				getActionBar().setTitle(userNames.get(position));
 				
 				//Change colour of mic and glow based on the user
 				
@@ -182,8 +199,11 @@ public class MainActivity extends FragmentActivity {
 				mUserPagerFragment.adapter.clearChat();
 
 				String currentLanguage = mUserPagerFragment.getLanguage();
+				
 				String currentUser = mUserPagerFragment.getUserName();
 
+				
+				
 				ArrayList<ChatMessage> currentChatSource = chatSource.get(currentLanguage);
 
 				for (int i = 0; i < currentChatSource.size(); i++) {
@@ -231,10 +251,87 @@ public class MainActivity extends FragmentActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
-		getMenuInflater().inflate(R.menu.main, menu);
+		getMenuInflater().inflate(R.menu.main_activity_actionbar, menu);
 		return true;
 	}
 
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+	    // Handle presses on the action bar items
+	    switch (item.getItemId()) {
+	        case R.id.action_settings:
+	            return true;
+	        case R.id.action_add_people:
+	        	
+	        	AlertDialog.Builder newUserDialog = new AlertDialog.Builder(this);
+
+	        	newUserDialog.setTitle("Add People");
+	        	newUserDialog.setMessage("What's your Name?");
+
+
+	        	final EditText input = new EditText(this);
+	        	LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
+	        	        LinearLayout.LayoutParams.MATCH_PARENT,
+	        	        LinearLayout.LayoutParams.WRAP_CONTENT);
+	        	input.setLayoutParams(lp);
+	        	newUserDialog.setView(input);
+
+	        	newUserDialog.setPositiveButton("Create", new DialogInterface.OnClickListener() {
+	        	    public void onClick(DialogInterface dialog, int whichButton) {
+	        	    	
+	        	    	String userName = input.getText().toString();
+	        	    	
+	        	    	/*
+	        	    	 * 
+	        	    	 
+	        	    	UserPagerFragment frag = UserPagerFragment.create(position, chatSource, userName);
+	        			frags.add(position, frag);
+	        	    	*/
+	        	    }	
+	        	});
+
+
+	        	newUserDialog.show();
+	            return true;
+	            
+	        case R.id.action_edit_name:
+	        	
+	        	
+	        	AlertDialog.Builder usernameDialog = new AlertDialog.Builder(this);
+
+	        	usernameDialog.setTitle("Edit Name");
+	        	usernameDialog.setMessage("New name:");
+
+
+	        	final EditText editName_et = new EditText(this);
+	        	LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+	        	        LinearLayout.LayoutParams.MATCH_PARENT,
+	        	        LinearLayout.LayoutParams.WRAP_CONTENT);
+	        	editName_et.setLayoutParams(params);
+	        	usernameDialog.setView(editName_et);
+
+	        	usernameDialog.setPositiveButton("Change", new DialogInterface.OnClickListener() {
+	        	    public void onClick(DialogInterface dialog, int whichButton) {
+	        	    	
+	        	    	String newUserName = editName_et.getText().toString();
+	        	    	
+	    	        	userNames.set(currentPagePosition, newUserName);
+	    	        	getActionBar().setTitle(newUserName);
+	    	        	mPagerAdapter.getFragment(currentPagePosition).setUserName(newUserName);
+	    	        	mPagerAdapter.notifyDataSetChanged();
+	        	    }
+	        	});
+
+
+	        	usernameDialog.show();
+	        	
+	            return true;
+	        default:
+	            return super.onOptionsItemSelected(item);
+	    }
+	}
+	
+	
 	private class UserPagerAdapter extends FragmentStatePagerAdapter {
 		private List<UserPagerFragment> frags = new ArrayList<UserPagerFragment>();
 
@@ -246,9 +343,7 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public Fragment getItem(int position) {
 			
-			String user_name = "";
-			if (position==0) user_name="Vlad";
-			else user_name = "Martin";
+			String user_name = userNames.get(position);
 
 			UserPagerFragment frag = UserPagerFragment.create(position, chatSource, user_name);
 			frags.add(position, frag);
