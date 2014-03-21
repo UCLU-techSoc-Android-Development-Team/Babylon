@@ -30,10 +30,11 @@ public class UserPagerFragment extends Fragment {
 
 	public static final String ARG_USER = "user";
 	public static final String USER_NAME = "user_name";
+	public static final String USER_COLOUR = "user_colour";
 
-	private static String PACKAGE_NAME;
-	private int mPageNumber;
-
+	//private static String PACKAGE_NAME;
+	//private int mPageNumber;
+		
 	private int NUMBER_OF_PAGES = 2;
 
 	/* Discussion List */
@@ -54,12 +55,15 @@ public class UserPagerFragment extends Fragment {
 
 	public static UserPagerFragment create(int pageNumber,
 			HashMap<String, ArrayList<ChatMessage>> inputChatSource,
-			String userName) {
+			String userName, String userColour) {
 
 		UserPagerFragment fragment = new UserPagerFragment();
 		Bundle args = new Bundle();
 		args.putInt(ARG_USER, pageNumber);
 		args.putString(USER_NAME, userName);
+		args.putString(USER_COLOUR, userColour);
+		
+		
 		fragment.setArguments(args);
 
 		chatSource = inputChatSource;
@@ -70,18 +74,16 @@ public class UserPagerFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
-		mPageNumber = getArguments().getInt(ARG_USER);
-		PACKAGE_NAME = this.getActivity().getApplicationContext()
-				.getPackageName();
-
+		
 		setupTextToSpeech();
-
 	}
+	
+	
 
 	private void setupTextToSpeech() {
 		textToSpeech = new TextToSpeech(this.getActivity(),
 				new TextToSpeech.OnInitListener() {
+					@Override
 					public void onInit(int status) {
 						if (status == TextToSpeech.SUCCESS) {
 						} else {
@@ -124,7 +126,9 @@ public class UserPagerFragment extends Fragment {
 		mPager = (ViewPager) rootView.findViewById(R.id.lang_pager);
 
 		mPager.setOnPageChangeListener(new OnPageChangeListener() {
-
+			
+			
+			
 			@Override
 			public void onPageScrollStateChanged(int arg0) {
 				// TODO Auto-generated method stub
@@ -138,11 +142,14 @@ public class UserPagerFragment extends Fragment {
 			@Override
 			public void onPageSelected(int position) {
 				// TODO Auto-generated method stub
-
+				
+				
+				
 				currentPosition = position;
 				String currentLanguage = getLanguage();
 				String currentUser = getUserName();
-
+				
+				
 				Log.d("New Language", currentLanguage);
 				Log.d("", "");
 
@@ -213,12 +220,27 @@ public class UserPagerFragment extends Fragment {
 
 		return langImageSrc[currentPosition];
 	}
+	
+	public String getUserColour() {
+		
+		return getArguments().getString(USER_COLOUR);
+	}
+	public void setUserColour(String userColour) {
+
+		 getArguments().putString(USER_COLOUR,userColour);
+	}
 
 	public String getUserName() {
 
 		return getArguments().getString(USER_NAME);
 	}
+	
+	public void setUserName(String userName) {
 
+		 getArguments().putString(USER_NAME,userName);
+	}
+	
+	
 	private class LanguageSliderAdapter extends FragmentStatePagerAdapter {
 
 		private List<LanguageSliderFragment> languages = new ArrayList<LanguageSliderFragment>();
@@ -226,7 +248,8 @@ public class UserPagerFragment extends Fragment {
 		public LanguageSliderAdapter(FragmentManager fm) {
 			super(fm);
 		}
-
+		
+		
 		@Override
 		public Fragment getItem(int position) {
 
@@ -236,7 +259,8 @@ public class UserPagerFragment extends Fragment {
 
 			return newFrag;
 		}
-
+		
+		
 		@Override
 		public int getCount() {
 			return NUMBER_OF_PAGES;

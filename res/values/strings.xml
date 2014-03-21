@@ -3,6 +3,8 @@
 
     <string name="app_name">Babylon</string>
     <string name="action_settings">Settings</string>
+    <string name="action_add_people">Add Person</string>
+    <string name="action_edit_name">Edit Name</string>
     <string name="hello_world">Hello world!</string>
     <string-array name="languages">
        <item>en</item> 

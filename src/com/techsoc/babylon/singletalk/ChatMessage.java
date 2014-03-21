@@ -8,26 +8,29 @@ public class ChatMessage {
 	private String message;
 	private String messageLanguage;
 	private Calendar messageTime;
+	private String boxColour;
 	private boolean leftPosition;
 
 	public ChatMessage(boolean left, String message, String messageLanguage,
-			String author, Calendar messageTime) {
+			String author, Calendar messageTime, String boxColour) {
 
 		this.leftPosition = left;
 		this.message = message;
 		this.messageLanguage = messageLanguage;
 		this.author = author;
 		this.messageTime = messageTime;
+		this.boxColour = boxColour;
 	}
 
 	public void setNewAttr(boolean left, String message,
-			String messageLanguage, String author, Calendar messageTime) {
+			String messageLanguage, String author, Calendar messageTime, String boxColour) {
 
 		this.leftPosition = left;
 		this.message = message;
 		this.messageLanguage = messageLanguage;
 		this.author = author;
 		this.messageTime = messageTime;
+		this.boxColour = boxColour;
 	}
 	public void setPosition(boolean left){
 		this.leftPosition = left;
@@ -51,6 +54,10 @@ public class ChatMessage {
 
 	public Calendar getCalendarTime() {
 		return this.messageTime;
+	}
+	
+	public String getBoxColour() {
+		return this.boxColour;
 	}
 	
 	public String getStringTime() {

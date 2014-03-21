@@ -9,6 +9,7 @@ import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -58,13 +59,15 @@ public class LanguageSliderFragment extends Fragment {
         ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.language_slider_fragment, container, false);
         
-      
+        
+        rootView.setLayoutParams(new LayoutParams (LayoutParams.MATCH_PARENT,LayoutParams.WRAP_CONTENT));
+        
         Resources res = getResources();
         
-        //uk ru
+        //header_en header_ru
         String[] langImageSrc = res.getStringArray(R.array.languages);
         
-        int imageDrawableId = res.getIdentifier(langImageSrc[mPageNumber], "drawable", PACKAGE_NAME);
+        int imageDrawableId = res.getIdentifier("header_" + langImageSrc[mPageNumber], "drawable", PACKAGE_NAME);
            
         ImageView langImage = (ImageView) rootView.findViewById(R.id.language_image);
         
@@ -95,7 +98,7 @@ public class LanguageSliderFragment extends Fragment {
 		DisplayMetrics metrics = this.getResources().getDisplayMetrics();
 
 		int newWidth = metrics.widthPixels;
-		float scaleFactor = (float) 0.75 *newWidth / imageWidth; //0.75 * 
+		float scaleFactor = (float) 0.75 *newWidth / imageWidth;  
 		int newHeight = (int) (imageHeight * scaleFactor);
 		
 		

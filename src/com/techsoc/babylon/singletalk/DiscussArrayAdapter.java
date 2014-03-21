@@ -82,14 +82,13 @@ public class DiscussArrayAdapter extends ArrayAdapter<ChatMessage> {
 		timeContainer = (TextView) row.findViewById(R.id.time);
 		timeContainer.setText(currentMessage.getStringTime());
 		
-
-		messageBody.setBackgroundResource(currentMessage.getPosition() ? R.drawable.stranger : R.drawable.mybox);
-
+		String currentColour = currentMessage.getBoxColour();
+		
+		messageBody.setBackgroundResource(context.getResources().getIdentifier(currentColour+"_box", "drawable", context.getPackageName()));
+				
+		
 		LinearLayout wrapper = (LinearLayout) row.findViewById(R.id.wrapper);
 		wrapper.setGravity(currentMessage.getPosition() ? Gravity.LEFT : Gravity.RIGHT);
-
-		//LinearLayout nameTime = (LinearLayout) row.findViewById(R.id.name_time);
-		//nameTime.setGravity(currentMessage.getPosition() ? Gravity.LEFT : Gravity.RIGHT);
 
 		return row;
 	}
