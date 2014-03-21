@@ -98,7 +98,7 @@ public class LanguageSliderFragment extends Fragment {
 		DisplayMetrics metrics = this.getResources().getDisplayMetrics();
 
 		int newWidth = metrics.widthPixels;
-		float scaleFactor = (float) 0.75 *newWidth / imageWidth; //0.75 * 
+		float scaleFactor = (float) 0.75 *newWidth / imageWidth;  
 		int newHeight = (int) (imageHeight * scaleFactor);
 		
 		

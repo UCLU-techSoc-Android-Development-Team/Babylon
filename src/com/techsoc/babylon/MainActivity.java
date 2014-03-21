@@ -12,7 +12,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
@@ -20,6 +19,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
 import android.util.Log;
@@ -28,16 +28,18 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnKeyListener;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TextView.OnEditorActionListener;
+import android.widget.Toast;
 
 import com.techsoc.Language.Translator;
 import com.techsoc.babylon.singletalk.ChatMessage;
@@ -47,7 +49,7 @@ public class MainActivity extends FragmentActivity {
 	
 	private static final int VOICE_RECOGNITION_REQUEST_CODE = 0;
 
-	public static final int NUM_PAGES = 2;
+	public static int NUM_PAGES = 2;
 
 	protected static String PACKAGE_NAME;
 
@@ -79,13 +81,14 @@ public class MainActivity extends FragmentActivity {
 		setContentView(R.layout.activity_main);
 		
 		//initialisng colours, currently there are only two colours
-		userColours.add("blue");
-		userColours.add("red");
-		userColours.add("yellow");
-		
-		//Initialising Names
 		userNames.add("Vlad");
+		userColours.add("blue");
+		
+		
 		userNames.add("Martin");
+		userColours.add("red");
+		
+		
 		
 		PACKAGE_NAME = this.getApplicationContext().getPackageName();
 		
@@ -107,8 +110,7 @@ public class MainActivity extends FragmentActivity {
 			            	
 			            	if (v.getText().toString().isEmpty() != true){	// Check if the text is not empty
 			            		
-				            	submitMessage(write_message_et.getText().toString());
-			            		
+				            	submitMessage(write_message_et.getText().toString());	
 			            	}
 			            	
 			         }    
@@ -123,7 +125,6 @@ public class MainActivity extends FragmentActivity {
 			public void onClick(View button) {
 				String tag = (String) button.getTag();
 				Log.v(tag, "mic CLick");
-				//button.setBackgroundResource(R.drawable.mic_btn_pressed_uk);
 				startVoiceRecognitionActivity();
 			}
 		});
@@ -170,8 +171,7 @@ public class MainActivity extends FragmentActivity {
 				
 				getActionBar().setTitle(userNames.get(position));
 				
-				//Change colour of mic and glow based on the user
-				
+				//Change colour of mic and glow based on the user				
 				String colour = userColours.get(position%(userColours.size()));
 				
 				if(android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN){
@@ -183,7 +183,7 @@ public class MainActivity extends FragmentActivity {
 							getResources().getIdentifier("edge_glow_" + colour, "drawable", PACKAGE_NAME)));
 					
 					mic_btn.invalidate();
-				}else{	
+				} else {	
 					// For devices older than API 16
 					mic_btn.setBackgroundDrawable(getResources().getDrawable(
 							getResources().getIdentifier("mic_btn_selector_" + colour, "drawable", PACKAGE_NAME)));
@@ -194,28 +194,33 @@ public class MainActivity extends FragmentActivity {
 					mic_btn.invalidate();
 				}
 				
-								
+					
 				mUserPagerFragment = mPagerAdapter.getFragment(position);
+				mPagerAdapter.notifyDataSetChanged();
+				
+	        	
 				mUserPagerFragment.adapter.clearChat();
 
 				String currentLanguage = mUserPagerFragment.getLanguage();
-				
 				String currentUser = mUserPagerFragment.getUserName();
 
 				
-				
 				ArrayList<ChatMessage> currentChatSource = chatSource.get(currentLanguage);
-
-				for (int i = 0; i < currentChatSource.size(); i++) {
-
-					ChatMessage curMessage = currentChatSource.get(i);
-
-					if (curMessage.getAuthor().equals(currentUser))
-						curMessage.setPosition(false);
-					else curMessage.setPosition(true);
+				
+				if (currentChatSource!=null) {
 					
-					mUserPagerFragment.adapter.add(curMessage);
+					for (int i = 0; i < currentChatSource.size(); i++) {
+						
+						ChatMessage curMessage = currentChatSource.get(i);
+						
+						if (curMessage.getAuthor().equals(currentUser))
+							curMessage.setPosition(false);
+						else curMessage.setPosition(true);
+						
+						mUserPagerFragment.adapter.add(curMessage);
+					}
 				}
+				
 			}
 
 		});
@@ -231,8 +236,9 @@ public class MainActivity extends FragmentActivity {
 
 		String language = mUserPagerFragment.getLanguage();
 		String currentUserName = mUserPagerFragment.getUserName();
+		String currentColour =  mUserPagerFragment.getUserColour();
 
-		ChatMessage newChatMessage = new ChatMessage(false, stringMessage, language, currentUserName, Calendar.getInstance());
+		ChatMessage newChatMessage = new ChatMessage(false, stringMessage, language, currentUserName, Calendar.getInstance(), currentColour);
 
 		new TranslateText(newChatMessage).execute(newChatMessage.getText(),
 				language, "ru");
@@ -248,6 +254,7 @@ public class MainActivity extends FragmentActivity {
 		write_message_et.setText("");
 	}
 
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		// Inflate the menu; this adds items to the action bar if it is present.
@@ -255,6 +262,7 @@ public class MainActivity extends FragmentActivity {
 		return true;
 	}
 
+	
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle presses on the action bar items
@@ -267,26 +275,45 @@ public class MainActivity extends FragmentActivity {
 
 	        	newUserDialog.setTitle("Add People");
 	        	newUserDialog.setMessage("What's your Name?");
-
-
+	        	
+	        	final LinearLayout listView = new LinearLayout(this);
+	        	listView.setOrientation(LinearLayout.VERTICAL);
+	        	
 	        	final EditText input = new EditText(this);
 	        	LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
 	        	        LinearLayout.LayoutParams.MATCH_PARENT,
 	        	        LinearLayout.LayoutParams.WRAP_CONTENT);
 	        	input.setLayoutParams(lp);
-	        	newUserDialog.setView(input);
-
+	        	listView.addView(input);
+	        	
+	        	
+	        	 final Spinner sprCoun = new Spinner(this);
+	        	 sprCoun.setLayoutParams(lp);
+	             List<String> colourList = new ArrayList<String>();
+	             colourList.add("blue");
+	             colourList.add("red");
+	             colourList.add("yellow");
+	             colourList.add("green");
+	             colourList.add("gray");
+	             ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this,android.R.layout.simple_spinner_item, colourList);
+	             dataAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+	             sprCoun.setAdapter(dataAdapter);
+	             listView.addView(sprCoun);
+	             
+	             newUserDialog.setView(listView);
+		        	
+	             
+	             
 	        	newUserDialog.setPositiveButton("Create", new DialogInterface.OnClickListener() {
 	        	    public void onClick(DialogInterface dialog, int whichButton) {
 	        	    	
 	        	    	String userName = input.getText().toString();
-	        	    	
-	        	    	/*
-	        	    	 * 
-	        	    	 
-	        	    	UserPagerFragment frag = UserPagerFragment.create(position, chatSource, userName);
-	        			frags.add(position, frag);
-	        	    	*/
+	        	    	String userColour = sprCoun.getSelectedItem().toString();
+	        	    	 	 
+	        	    	userNames.add(userName);
+	        	    	userColours.add(userColour);
+	        	    	NUM_PAGES++;
+	        	    	mPagerAdapter.notifyDataSetChanged();  	    
 	        	    }	
 	        	});
 
@@ -326,6 +353,7 @@ public class MainActivity extends FragmentActivity {
 	        	usernameDialog.show();
 	        	
 	            return true;
+	            
 	        default:
 	            return super.onOptionsItemSelected(item);
 	    }
@@ -343,10 +371,19 @@ public class MainActivity extends FragmentActivity {
 		@Override
 		public Fragment getItem(int position) {
 			
+			UserPagerFragment frag; 
+			
 			String user_name = userNames.get(position);
-
-			UserPagerFragment frag = UserPagerFragment.create(position, chatSource, user_name);
+			String user_colour = userColours.get(position);
+			
+			frag = UserPagerFragment.create(position, chatSource, user_name, user_colour);
+			
+			if (frags.size()>position) {
+				frags.remove(position);
+			}
 			frags.add(position, frag);
+			
+			
 			return frag;
 		}
 
@@ -355,12 +392,53 @@ public class MainActivity extends FragmentActivity {
 		public int getCount() {
 			return NUM_PAGES;
 		}
+		
+		
+		
+		
+		
 
 		public UserPagerFragment getFragment(int position) {
+			
+			if (frags.get(position).getActivity()==null) {
+				Toast.makeText(getApplicationContext(), "oh no", Toast.LENGTH_SHORT).show();
+				
+				return initFragment(position);
+				
+			}
+			
 			return frags.get(position);
 		}
+		
+		
+		 private UserPagerFragment initFragment(int position) {
+			 
+			 FragmentManager fragmentManager = getSupportFragmentManager();
+		     FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+			 
+			 fragmentTransaction.remove(frags.get(position)).commit();
+			 frags.remove(position);
+			 
+			 fragmentTransaction = fragmentManager.beginTransaction();
+			       
+		     UserPagerFragment frag;
+			 String user_name = userNames.get(position);
+			 String user_colour = userColours.get(position);
+				
+			 frag = UserPagerFragment.create(position, chatSource, user_name, user_colour);
+		     fragmentTransaction.replace(R.id.user_pager_frag, frag);
+		     fragmentTransaction.commit();
+		        
+		     frags.add(position, frag);
+		     return frag;
+		   }
+		
+		
 	}
 
+	
+	
+	
 	
 	private void playKeyboardShowAnim(){
 		
@@ -417,10 +495,11 @@ public class MainActivity extends FragmentActivity {
 			ArrayList<String> matches = data
 					.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
 			String message = matches.get(0);
-			//mic_btn.setBackgroundResource(R.drawable.mic_btn_selector_uk);
 			submitMessage(message);
 		}
 	}
+	
+	
 	
 	
 	class TranslateText extends AsyncTask<String, Void, String> {
@@ -467,7 +546,7 @@ public class MainActivity extends FragmentActivity {
 
 			ChatMessage newChatMessage = new ChatMessage(false, translatedText,
 					outputLanguage, curParentMessage.getAuthor(),
-					curParentMessage.getCalendarTime());
+					curParentMessage.getCalendarTime(), curParentMessage.getBoxColour());
 
 			if (outputLanguage.equals("en")) {
 
