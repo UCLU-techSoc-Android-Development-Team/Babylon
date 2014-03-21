@@ -22,12 +22,14 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.support.v4.view.ViewPager.OnPageChangeListener;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -91,6 +93,8 @@ public class MainActivity extends FragmentActivity {
 		
 		
 		PACKAGE_NAME = this.getApplicationContext().getPackageName();
+		
+		
 		
 		edgeGlow_iv = (ImageView)findViewById(R.id.edge_glow);
 		keyboard_btn = (ImageButton)findViewById(R.id.keyboard_btn);
@@ -202,7 +206,8 @@ public class MainActivity extends FragmentActivity {
 				mUserPagerFragment.adapter.clearChat();
 
 				String currentLanguage = mUserPagerFragment.getLanguage();
-				String currentUser = mUserPagerFragment.getUserName();
+				String currentUserName = mUserPagerFragment.getUserName();
+				int currentPageNumber = mUserPagerFragment.getPageNumber();
 
 				
 				ArrayList<ChatMessage> currentChatSource = chatSource.get(currentLanguage);
@@ -213,9 +218,13 @@ public class MainActivity extends FragmentActivity {
 						
 						ChatMessage curMessage = currentChatSource.get(i);
 						
-						if (curMessage.getAuthor().equals(currentUser))
+						if (curMessage.getPageNumber() == currentPageNumber) {
+							
+							if (!curMessage.getAuthor().equals(currentUserName)) curMessage.setAuthor(currentUserName);
 							curMessage.setPosition(false);
-						else curMessage.setPosition(true);
+						}
+						else
+							curMessage.setPosition(true);
 						
 						mUserPagerFragment.adapter.add(curMessage);
 					}
@@ -237,8 +246,10 @@ public class MainActivity extends FragmentActivity {
 		String language = mUserPagerFragment.getLanguage();
 		String currentUserName = mUserPagerFragment.getUserName();
 		String currentColour =  mUserPagerFragment.getUserColour();
+		int currentPageNumber = mUserPagerFragment.getPageNumber();
 
-		ChatMessage newChatMessage = new ChatMessage(false, stringMessage, language, currentUserName, Calendar.getInstance(), currentColour);
+		ChatMessage newChatMessage = new ChatMessage(false, stringMessage, language, currentUserName, 
+				Calendar.getInstance(), currentColour, currentPageNumber);
 
 		new TranslateText(newChatMessage).execute(newChatMessage.getText(),
 				language, "ru");
@@ -394,9 +405,6 @@ public class MainActivity extends FragmentActivity {
 		}
 		
 		
-		
-		
-		
 
 		public UserPagerFragment getFragment(int position) {
 			
@@ -546,7 +554,7 @@ public class MainActivity extends FragmentActivity {
 
 			ChatMessage newChatMessage = new ChatMessage(false, translatedText,
 					outputLanguage, curParentMessage.getAuthor(),
-					curParentMessage.getCalendarTime(), curParentMessage.getBoxColour());
+					curParentMessage.getCalendarTime(), curParentMessage.getBoxColour(), curParentMessage.getPageNumber());
 
 			if (outputLanguage.equals("en")) {
 

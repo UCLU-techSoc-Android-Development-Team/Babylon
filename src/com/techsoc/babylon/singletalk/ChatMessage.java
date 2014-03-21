@@ -10,9 +10,10 @@ public class ChatMessage {
 	private Calendar messageTime;
 	private String boxColour;
 	private boolean leftPosition;
+	private int pageNumber;
 
 	public ChatMessage(boolean left, String message, String messageLanguage,
-			String author, Calendar messageTime, String boxColour) {
+			String author, Calendar messageTime, String boxColour, int pageNumber) {
 
 		this.leftPosition = left;
 		this.message = message;
@@ -20,10 +21,11 @@ public class ChatMessage {
 		this.author = author;
 		this.messageTime = messageTime;
 		this.boxColour = boxColour;
+		this.pageNumber = pageNumber;
 	}
 
 	public void setNewAttr(boolean left, String message,
-			String messageLanguage, String author, Calendar messageTime, String boxColour) {
+			String messageLanguage, String author, Calendar messageTime, String boxColour, int pageNumber) {
 
 		this.leftPosition = left;
 		this.message = message;
@@ -31,6 +33,7 @@ public class ChatMessage {
 		this.author = author;
 		this.messageTime = messageTime;
 		this.boxColour = boxColour;
+		this.pageNumber = pageNumber;
 	}
 	public void setPosition(boolean left){
 		this.leftPosition = left;
@@ -51,6 +54,9 @@ public class ChatMessage {
 	public String getAuthor() {
 		return this.author;
 	}
+	public void setAuthor(String newAuthor) {
+		this.author = newAuthor;
+	}
 
 	public Calendar getCalendarTime() {
 		return this.messageTime;
@@ -60,6 +66,10 @@ public class ChatMessage {
 		return this.boxColour;
 	}
 	
+	public int getPageNumber(){
+		return this.pageNumber;
+	}
+	
 	public String getStringTime() {
 
 		Integer seconds = messageTime.get(Calendar.SECOND);
@@ -67,18 +77,18 @@ public class ChatMessage {
 		Integer hours = messageTime.get(Calendar.HOUR_OF_DAY);
 		
 		String stringSeconds = seconds.toString();
-		if (seconds.equals(0)) {	
-		   stringSeconds = stringSeconds+"0";
+		if (seconds < 10) {	
+		   stringSeconds = "0" + stringSeconds;
 		}
 		
 		String stringMinutes = minutes.toString();
-		if (minutes.equals(0)) {	
-			stringMinutes = stringMinutes+"0";
+		if (minutes < 10) {	
+			stringMinutes = "0" + stringMinutes;
 		}
 		
 		String stringHours = hours.toString();
-		if (hours.equals(0)) {	
-			stringHours = stringHours+"0";
+		if (hours < 10) {	
+			stringHours = "0" + stringHours;
 		}
 		return stringHours + ":" + stringMinutes + ":" + stringSeconds;
 	}

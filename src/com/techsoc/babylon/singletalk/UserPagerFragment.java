@@ -52,11 +52,14 @@ public class UserPagerFragment extends Fragment {
 	private int currentPosition = 0;
 
 	private TextToSpeech textToSpeech;
+	
+	private int pageNumber;
 
 	public static UserPagerFragment create(int pageNumber,
 			HashMap<String, ArrayList<ChatMessage>> inputChatSource,
 			String userName, String userColour) {
-
+		
+		
 		UserPagerFragment fragment = new UserPagerFragment();
 		Bundle args = new Bundle();
 		args.putInt(ARG_USER, pageNumber);
@@ -147,7 +150,8 @@ public class UserPagerFragment extends Fragment {
 				
 				currentPosition = position;
 				String currentLanguage = getLanguage();
-				String currentUser = getUserName();
+				String currentUserName = getUserName();
+				int currentPageNumber = getPageNumber();
 				
 				
 				Log.d("New Language", currentLanguage);
@@ -162,11 +166,16 @@ public class UserPagerFragment extends Fragment {
 
 					ChatMessage curMessage = currentChatSource.get(i);
 
-					if (curMessage.getAuthor().equals(currentUser))
+					//if (curMessage.getAuthor().equals(currentUser))
+					if (curMessage.getPageNumber() == currentPageNumber) {
+						
+						if (!curMessage.getAuthor().equals(currentUserName)) curMessage.setAuthor(currentUserName);
 						curMessage.setPosition(false);
+					}
 					else
 						curMessage.setPosition(true);
-
+					
+					
 					adapter.add(curMessage);
 				}
 			}
@@ -229,6 +238,16 @@ public class UserPagerFragment extends Fragment {
 
 		 getArguments().putString(USER_COLOUR,userColour);
 	}
+	
+	public int getPageNumber() {
+		
+		return getArguments().getInt(ARG_USER);
+	}
+    public void setPageNumber() {
+		
+		getArguments().putInt(ARG_USER,pageNumber);
+	}
+	
 
 	public String getUserName() {
 

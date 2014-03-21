@@ -7,14 +7,15 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
+import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 
 import com.techsoc.babylon.R;
 
@@ -67,10 +68,18 @@ public class DiscussArrayAdapter extends ArrayAdapter<ChatMessage> {
 		}
 
 		messageBody = (LinearLayout) row.findViewById(R.id.message_body);
+		
 
 		ChatMessage currentMessage = getItem(position);
 
 		textContainer = (TextView) row.findViewById(R.id.message);
+			
+		DisplayMetrics displaymetrics = new DisplayMetrics();
+		((WindowManager) getContext().getSystemService(Context.WINDOW_SERVICE))
+		  .getDefaultDisplay().getMetrics(displaymetrics);
+		
+		textContainer.setMaxWidth((int) (displaymetrics.widthPixels*0.7));
+		
 		textContainer.setText(currentMessage.getText());
 		Typeface type = Typeface.createFromAsset(context.getAssets(),"fonts/Calibri.ttf");
 		textContainer.setTypeface(type);
