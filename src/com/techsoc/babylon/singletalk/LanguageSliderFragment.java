@@ -18,17 +18,24 @@ import com.techsoc.babylon.R;
 public class LanguageSliderFragment extends Fragment {
 	
 	public static final String ARG_LANG = "page";
+	public static final String ALL_LANG = "all_lang";
 	public String currentLanguage = "en";
 	
 	private static String PACKAGE_NAME;
 	
 	private int mPageNumber;
+	
+	private String[] swipeLang;
+	TextView langView;
 
-	public static LanguageSliderFragment create(int pageNumber) {
+	public static LanguageSliderFragment create(int pageNumber, String[] swipeLang) {
 		
 		LanguageSliderFragment fragment = new LanguageSliderFragment();
+		// creating Bundle to pass parameters to the fragment
 		Bundle args = new Bundle();
 		args.putInt(ARG_LANG, pageNumber);
+		args.putStringArray(ALL_LANG, swipeLang);
+		
 		fragment.setArguments(args);
 		return fragment;
 	}
@@ -38,16 +45,21 @@ public class LanguageSliderFragment extends Fragment {
         super.onCreate(savedInstanceState);
         
         mPageNumber = getArguments().getInt(ARG_LANG);
+        swipeLang = getArguments().getStringArray(ALL_LANG);
+        
         PACKAGE_NAME = this.getActivity().getApplicationContext().getPackageName();
+        
+       
     }
     
     
-    public String returnLang(){
+   /* public String returnLang(){
     	
     	Resources res = getResources();
-    	String[] langImageSrc = res.getStringArray(R.array.languages);
+    	String[] langImageSrc = res.getStringArray(R.array.lang_code);
+    	
     	return langImageSrc[mPageNumber];
-    }
+    }*/
     
     
     
@@ -56,7 +68,7 @@ public class LanguageSliderFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
 		
-        ViewGroup rootView = (ViewGroup) inflater.inflate(
+		 ViewGroup rootView = (ViewGroup) inflater.inflate(
                 R.layout.language_slider_fragment, container, false);
         
         
@@ -64,27 +76,30 @@ public class LanguageSliderFragment extends Fragment {
         
         Resources res = getResources();
         
-        //header_en header_ru
-        String[] langImageSrc = res.getStringArray(R.array.languages);
-        
-        int imageDrawableId = res.getIdentifier("header_" + langImageSrc[mPageNumber], "drawable", PACKAGE_NAME);
+        int imageDrawableId = res.getIdentifier("header_" + "en", "drawable", PACKAGE_NAME);
            
         ImageView langImage = (ImageView) rootView.findViewById(R.id.language_image);
         
-        langImage.setImageBitmap(resizeImage(imageDrawableId)); //imageDrawableId
+        langImage.setImageBitmap(resizeImage(imageDrawableId)); 
         
        
-        
-        TextView textView = (TextView) rootView.findViewById(R.id.language_textView);
         //TODO: Refactor into Adapter for international code
-        if (langImageSrc[mPageNumber].equals("ru")) {
-        	textView.setText("Russian");
-        } else if (langImageSrc[mPageNumber].equals("en")) {
-        	textView.setText("English");
-        }
-
+        langView = (TextView) rootView.findViewById(R.id.language_textView);
+        langView.setText(swipeLang[mPageNumber]);
+        	
         return rootView;
     }
+	
+	public void setTitle(String newTitle) {
+	   //TODO: Refactor into Adapter for international code
+        
+        langView.setText(newTitle);
+	}
+	
+	public void setTitleFromArray(String[] namesArray) {
+		
+		langView.setText(namesArray[mPageNumber]);
+	}
 	
 	
 	private Bitmap resizeImage(int resourceId) {

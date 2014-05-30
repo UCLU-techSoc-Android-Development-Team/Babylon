@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Locale;
 
 import android.content.Intent;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.support.v4.app.Fragment;
@@ -22,7 +21,9 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.techsoc.Language.Language;
 import com.techsoc.babylon.R;
+
 
 public class UserPagerFragment extends Fragment {
 
@@ -31,9 +32,8 @@ public class UserPagerFragment extends Fragment {
 	public static final String ARG_USER = "user";
 	public static final String USER_NAME = "user_name";
 	public static final String USER_COLOUR = "user_colour";
+	public static final String ALL_LANG = "all_lang";
 
-	//private static String PACKAGE_NAME;
-	//private int mPageNumber;
 		
 	private int NUMBER_OF_PAGES = 2;
 
@@ -50,23 +50,32 @@ public class UserPagerFragment extends Fragment {
 	private static HashMap<String, ArrayList<ChatMessage>> chatSource;
 
 	private int currentPosition = 0;
+	private int pageNumber;
 
 	private TextToSpeech textToSpeech;
 	
-	private int pageNumber;
-
+	
+	public static Language lang;
+	public static String userName;
+	public static String userColour;
+	
+	
 	public static UserPagerFragment create(int pageNumber,
 			HashMap<String, ArrayList<ChatMessage>> inputChatSource,
-			String userName, String userColour) {
+			String userName, String userColour, Language language) {
 		
+		lang = language;
 		
 		UserPagerFragment fragment = new UserPagerFragment();
+		
 		Bundle args = new Bundle();
 		args.putInt(ARG_USER, pageNumber);
 		args.putString(USER_NAME, userName);
 		args.putString(USER_COLOUR, userColour);
 		
-		
+		String[] swipeLang = lang.getSwipeCountries();
+		args.putStringArray(ALL_LANG, swipeLang);
+				
 		fragment.setArguments(args);
 
 		chatSource = inputChatSource;
@@ -77,7 +86,7 @@ public class UserPagerFragment extends Fragment {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
+			
 		setupTextToSpeech();
 	}
 	
@@ -89,6 +98,7 @@ public class UserPagerFragment extends Fragment {
 					@Override
 					public void onInit(int status) {
 						if (status == TextToSpeech.SUCCESS) {
+							Log.d("setupTextToSpeech", "setuped Text to Speech");
 						} else {
 							Log.e(TAG, "Failed to intialize Text to Speech");
 						}
@@ -125,12 +135,10 @@ public class UserPagerFragment extends Fragment {
 
 		});
 
-		/* Initialise the View Pager with its adapter */
+		/* Initialise the language View Pager with its adapter */
 		mPager = (ViewPager) rootView.findViewById(R.id.lang_pager);
 
 		mPager.setOnPageChangeListener(new OnPageChangeListener() {
-			
-			
 			
 			@Override
 			public void onPageScrollStateChanged(int arg0) {
@@ -146,27 +154,27 @@ public class UserPagerFragment extends Fragment {
 			public void onPageSelected(int position) {
 				// TODO Auto-generated method stub
 				
+				String curSwipeCountry = lang.getSwipeCountries()[position]; 
 				
 				
 				currentPosition = position;
-				String currentLanguage = getLanguage();
+				String currentLanguage =  lang.getLanguageCode(curSwipeCountry);
 				String currentUserName = getUserName();
 				int currentPageNumber = getPageNumber();
 				
 				
 				Log.d("New Language", currentLanguage);
-				Log.d("", "");
+				
 
-				ArrayList<ChatMessage> currentChatSource = chatSource
+				ArrayList<ChatMessage> curChatSource = chatSource
 						.get(currentLanguage);
 
 				adapter.clearChat();
 
-				for (int i = 0; i < currentChatSource.size(); i++) {
+				for (int i = 0; (curChatSource!=null) && (i < curChatSource.size()); i++) {
 
-					ChatMessage curMessage = currentChatSource.get(i);
+					ChatMessage curMessage = curChatSource.get(i);
 
-					//if (curMessage.getAuthor().equals(currentUser))
 					if (curMessage.getPageNumber() == currentPageNumber) {
 						
 						if (!curMessage.getAuthor().equals(currentUserName)) curMessage.setAuthor(currentUserName);
@@ -174,8 +182,7 @@ public class UserPagerFragment extends Fragment {
 					}
 					else
 						curMessage.setPosition(true);
-					
-					
+								
 					adapter.add(curMessage);
 				}
 			}
@@ -190,23 +197,48 @@ public class UserPagerFragment extends Fragment {
 		return rootView;
 	}
 	
+	
+	
+	public void updateLanguageFragment(){
+		
+		mPagerAdapter = new LanguageSliderAdapter(
+				this.getChildFragmentManager());
+		mPager.setAdapter(mPagerAdapter);
+		mPager.setPageTransformer(true, new DepthPageTransformer());
+		mPagerAdapter.notifyDataSetChanged();
+	}
+	
+
+	
+	
+	
+	
+	public boolean checkTTSSupportLanguage(Locale inputTTS) { 
+		
+		return textToSpeech.isLanguageAvailable(inputTTS) == TextToSpeech.LANG_MISSING_DATA
+				|| textToSpeech.isLanguageAvailable(inputTTS) == TextToSpeech.LANG_NOT_SUPPORTED ? false
+				: true; 
+	} 
+
 	private void convertToSpeech(String text, String currentLanguage) {
+		// download unknown language
 		
 		Log.d("Input Language", currentLanguage);
 		
-		Locale lanLocale;
+		Locale lanLocale = new Locale(currentLanguage);
+        
+		boolean checkThisOut;
+		checkThisOut = checkTTSSupportLanguage(lanLocale);
+		Log.v("convertToSpeech", "checkTTSSupportLanguage: " + checkThisOut);
 		
-		if (currentLanguage.equals("en")) {
-			lanLocale = Locale.UK;
-		}
-		else lanLocale = new Locale(currentLanguage);
 		
-		
-		if (textToSpeech
-				.isLanguageAvailable(lanLocale) == TextToSpeech.LANG_AVAILABLE) {
+		if ( checkTTSSupportLanguage(lanLocale) ) {
+			
 			textToSpeech.setLanguage(lanLocale);
 			Log.v("Translate", "Language Available: " + currentLanguage);
 			textToSpeech.speak(text, TextToSpeech.QUEUE_ADD, null);
+			Log.v("convertToSpeech", "Speak");
+
 		} else {
 			Log.e("Translate", "Language Not Available: "
 					+ currentLanguage);
@@ -223,11 +255,11 @@ public class UserPagerFragment extends Fragment {
 	}
 
 	public String getLanguage() {
+		
+		String curSwipeCountry = lang.getSwipeCountries()[currentPosition];
+	   
 
-		Resources res = getResources();
-		String[] langImageSrc = res.getStringArray(R.array.languages);
-
-		return langImageSrc[currentPosition];
+		return lang.getLanguageCode(curSwipeCountry);
 	}
 	
 	public String getUserColour() {
@@ -253,10 +285,14 @@ public class UserPagerFragment extends Fragment {
 
 		return getArguments().getString(USER_NAME);
 	}
-	
 	public void setUserName(String userName) {
 
 		 getArguments().putString(USER_NAME,userName);
+	}
+	
+	public void updateFragment(HashMap<String, ArrayList<ChatMessage>> newChatSource) {
+		
+		UserPagerFragment.chatSource = newChatSource;
 	}
 	
 	
@@ -266,14 +302,22 @@ public class UserPagerFragment extends Fragment {
 
 		public LanguageSliderAdapter(FragmentManager fm) {
 			super(fm);
+			String[] swipeLnag = lang.getSwipeCountries();
+
+			int i = 0;
+			while ((swipeLnag[i]!=null)&&(i<swipeLnag.length)) {
+				i++;
+			}
+			NUMBER_OF_PAGES = i;
 		}
+		
 		
 		
 		@Override
 		public Fragment getItem(int position) {
 
 			LanguageSliderFragment newFrag = LanguageSliderFragment
-					.create(position);
+					.create(position, lang.getSwipeCountries()); 
 			languages.add(newFrag);
 
 			return newFrag;

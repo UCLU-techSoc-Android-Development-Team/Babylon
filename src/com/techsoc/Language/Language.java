@@ -1,68 +1,64 @@
 package com.techsoc.Language;
 
 import java.util.ArrayList;
+import java.util.Locale;
+
+import android.util.Log;
 
 public class Language {
 
-	public String RUSSIAN_LANGUAGE_CODE = "ru";
-	public String ENGLISH_LANGUAGE_CODE = "en";
-	public String GERMAN_LANGUAGE_CODE = "de";
-	public String ITALIAN_LANGUAGE_CODE = "it";
-	public String ROMANIAN_LANGUAGE_CODE = "ro";
-	public String NORWEGIAN_LANGUAGE_CODE = "no";
-	public String SOUTHKOREAN_LANGUAGE_CODE = "ko";
-	public String CHINESE_LANGUAGE_CODE = "zh-CN";
-	public String HINDI_LANGUAGE_CODE ="hi";
 	
-	public ArrayList<String> countries;
+	private String[] swipeCountries = new String[5];
+	
+	private ArrayList<String> countries;
+	private ArrayList<String> codes;
 	
 	public Language() {
-		countries = new ArrayList<String>(); 
-     	countries.add("United Kingdom");
-   		countries.add("Germany");
-   		countries.add("Russia");
-    	countries.add("Italy");
-    	 // to get all countries
-        //Locale[] locales = Locale.getAvailableLocales(); // get all locales available     
-        /*
-        for (Locale l : locales) {
-        	String country = l.getDisplayCountry(); // get country name
-        	if (country.trim().length() > 0 && !countries.contains(country)) { // country is not already in the array
-        		countries.add(country); 
-        	}
-        }*/
-	}
-	
-	
-	
-	
-	public String getLanguageCode(String language) {
 		
-		if (language.equals("English")) return ENGLISH_LANGUAGE_CODE;
-		else if (language.equals("Deutsch")) return GERMAN_LANGUAGE_CODE;
-		else if (language.equals("Italiano")) return ITALIAN_LANGUAGE_CODE;
-		else if (language.equals("Русский")) return RUSSIAN_LANGUAGE_CODE;
-		else if (language.equals("Român")) return ROMANIAN_LANGUAGE_CODE;
-		else if (language.equals("Norsk")) return NORWEGIAN_LANGUAGE_CODE;
-		else if (language.equals("中国的")) return CHINESE_LANGUAGE_CODE;
-		else if (language.equals("हिंदी")) return HINDI_LANGUAGE_CODE;
-		else if (language.equals("한국의")) return SOUTHKOREAN_LANGUAGE_CODE;
-		else return "";
+		
+		swipeCountries[0] = "United Kingdom";
+		swipeCountries[1] = "Russia";
+		
+		getLangCodes();
 	}
 	
-    public String getLanguageFromCode(String code) {
+	
+	public void setSwipeLang(String[] swipeLang) {
 		
-		if (code.equals(ENGLISH_LANGUAGE_CODE)) return "English";
-		else if (code.equals(GERMAN_LANGUAGE_CODE)) return "Deutsch";
-		else if (code.equals(ITALIAN_LANGUAGE_CODE)) return "Italiano";
-		else if (code.equals(RUSSIAN_LANGUAGE_CODE)) return "Русский";
-		else if (code.equals(ROMANIAN_LANGUAGE_CODE)) return "Român";
-		else if (code.equals(NORWEGIAN_LANGUAGE_CODE)) return "Norsk";
-		else if (code.equals(CHINESE_LANGUAGE_CODE)) return "中国的";
-		else if (code.equals(HINDI_LANGUAGE_CODE)) return "हिंदी";
-		else if (code.equals(SOUTHKOREAN_LANGUAGE_CODE)) return "한국의";
-		else return "";
+		this.swipeCountries = swipeLang;
 	}
+	
+	public String[] getSwipeCountries(){
+		
+		return swipeCountries;
+	}
+	
+	
+	public String getLanguageCode(String country) {
+		
+		Log.v("getLanguageCode ", "for "+country);
+		
+		if (countries.contains(country)){
+			
+			String newCode = codes.get(countries.indexOf(country));
+			
+			Log.v("getLanguageCode ", "code for "+country+" is "+ newCode);
+			return newCode;
+		}
+		else Log.e("getLanguageCode", "no country "+country);
+		
+		return "";
+	}
+	
+	public String getLangCodeAfterWrong(String country, String wrongCode) {
+		
+		int wrongIndex = codes.indexOf(wrongCode);
+		Log.e("getLangCodeAfterWrong ", "wrong code for "+country+" is "+ wrongCode);
+		codes.remove(wrongIndex);
+		countries.remove(wrongIndex);
+		return getLanguageCode(country);
+	}
+
     
     public boolean doWeHaveThisCountry(String inputCountry) {
     	ArrayList<String> arrayCountries = this.countries;
@@ -77,6 +73,30 @@ public class Language {
     	return this.countries;
     }
 	
-	
+	private void getLangCodes() {
+		
+		Locale[] locales = Locale.getAvailableLocales();
+		countries = new ArrayList<String>();
+		codes = new ArrayList<String>();
+		
+		
+		for (Locale locale : locales) {
+			
+			String country = locale.getDisplayCountry();
+			String code = locale.getLanguage();
+			String code2 = locale.getDisplayName();
+			String code3 =""; //= locale.getISO3Country();
+			String code4 =""; //= locale.getISO3Language();
+			
+			
+			if ( (country.trim().length() > 0)) {// && !countries.contains(country)) ) {
+				
+				Log.v(country+" ", code+" "+code2+" "+code3+" "+code4);
+				countries.add(country);
+				codes.add(code);
+		    }
+		}
+		
+	}
 	
 }
